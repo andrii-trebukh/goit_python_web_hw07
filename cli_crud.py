@@ -33,16 +33,11 @@ def make_nice_table(header, body, column_width=25):
 @command_handler("list")
 def list_command(model, rid, column, value):
     columns = dict(inspect(MODELS[model]).attrs)
-    criteria = {}
+    criteria = {"id": rid} if rid else {}
     if column is not None and value is None:
-        val = columns[column]
-        columns.clear()
-        columns[column] = val
-    elif value is not None and column is not None:
-        criteria = {column: value}
-
-    if rid is not None:
-        criteria["id"] = rid
+        columns = {column: columns[column]}
+    elif column is not None and value is not None:
+        criteria[column] = value
 
     stmt = select(*columns.values()).filter_by(**criteria)
     result = session.execute(stmt)
@@ -102,9 +97,9 @@ def main():
     parser.add_argument(
         "-a",
         "--action",
-        choices=("create", "list", "update", "remove"),
+        choices=COMMANDS,
         nargs=1,
-        help="Database actions",
+        help="Database action",
         required=True
     )
     parser.add_argument(
@@ -112,7 +107,7 @@ def main():
         "--model",
         choices=MODELS,
         nargs=1,
-        help="Database actions",
+        help="Database model",
         required=True
     )
     parser.add_argument(
